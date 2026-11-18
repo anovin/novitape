@@ -16,7 +16,7 @@ echo "clang: $(xcrun --find clang)"
 
 CMAKE="$(command -v cmake)"
 if [ -z "$CMAKE" ]; then
-  for c in /opt/homebrew/bin/cmake /usr/local/bin/cmake /Applications/CMake.app/Contents/bin/cmake "$ROOT/.tools/cmake/CMake.app/Contents/bin/cmake"; do
+  for c in /opt/homebrew/bin/cmake /usr/local/bin/cmake /Applications/CMake.app/Contents/bin/cmake "$ROOT/.tools/cmake/CMake.app/Contents/bin/cmake" "$ROOT/../NoviChords/.tools/cmake/CMake.app/Contents/bin/cmake"; do
     [ -x "$c" ] && CMAKE="$c" && break
   done
 fi
