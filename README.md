@@ -49,6 +49,8 @@ Speed, Reverse, Stutter and Chop follow FL Studio's tempo.
 
 ## Building from source
 
+**Easiest on your own Mac:** right-click `packaging/Build-NoviTape-on-Mac.command` and choose **Open**. It builds a universal VST3 and AU, installs both, and logs to `build.log`. It downloads CMake itself if needed; Apple's Command Line Tools must be installed.
+
 The GitHub Actions workflow builds a universal (Apple Silicon + Intel) VST3 and AU on every push to `main`. To build locally you need CMake 3.22+ and Xcode command line tools:
 
 ```
