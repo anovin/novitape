@@ -1,0 +1,59 @@
+name: Build NoviTape (Mac)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Configure (universal: Apple Silicon + Intel)"
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build VST3, AU and engine tests
+        run: cmake --build build --target NoviTape_VST3 NoviTape_AU EngineTest -j 4
+
+      - name: Run engine tests
+        run: ./build/EngineTest | tail -1
+
+      - name: Validate the AU
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R build/NoviTape_artefacts/Release/AU/NoviTape.component ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          sleep 3
+          auval -v aumf NovT Anov | tail -5
+
+      - name: Sign (ad-hoc) and package
+        run: |
+          ART=build/NoviTape_artefacts/Release
+          codesign --force --deep --sign - "$ART/VST3/NoviTape.vst3"
+          codesign --force --deep --sign - "$ART/AU/NoviTape.component"
+          mkdir -p NoviTape
+          cp -R "$ART/VST3/NoviTape.vst3" "$ART/AU/NoviTape.component" NoviTape/
+          cp packaging/Install-NoviTape.command NoviTape/
+          chmod +x NoviTape/Install-NoviTape.command
+          cp README.md NoviTape/
+          ditto -c -k --keepParent NoviTape NoviTape-mac.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NoviTape-mac
+          path: NoviTape-mac.zip
+
+      - name: Publish to the "latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest NoviTape-mac.zip \
+            --title "NoviTape (latest Mac build)" \
+            --notes "Download NoviTape-mac.zip, unzip it, then right-click Install-NoviTape.command and choose Open." \
+            --target "${{ github.sha }}" --latest
